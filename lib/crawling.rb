@@ -12,6 +12,17 @@ module Crawling
     Dir.glob("#{path}/**/*").reject(&File.method(:directory?))
   end
 
+  # Like File.cp but also creates the parent directory at destination if it doesn't exist
+  def self.copy_file src_file, dest_file
+    dest_parent_dir = File.dirname dest_file
+    FileUtils.mkdir_p dest_parent_dir unless Dir.exist? dest_parent_dir
+    begin
+      FileUtils.cp(src_file, dest_file)
+    rescue
+      raise "could not copy from #{src_file} to #{dest_file}"
+    end
+  end
+
   class Instance
     def initialize(config_dir: nil, home_dir: nil)
       @home_dir = home_dir || ENV['HOME']
@@ -39,14 +50,7 @@ module Crawling
 
         files_from(path).each do |file|
           storage_file = get_storage_path file
-
-          parent_data_path = File.dirname storage_file
-          FileUtils.mkdir_p parent_data_path unless Dir.exist? parent_data_path
-          begin
-            FileUtils.cp(file, storage_file)
-          rescue
-            raise "could not copy from #{file} to #{storage_file}"
-          end
+          Crawling.copy_file file, storage_file
         end
       end
     end
@@ -60,14 +64,7 @@ module Crawling
 
         files_from(storage_path).each do |storage_file|
           sys_path = from_storage_path storage_file
-
-          parent_data_path = File.dirname sys_path
-          FileUtils.mkdir_p parent_data_path unless Dir.exist? parent_data_path
-          begin
-            FileUtils.cp(storage_file, sys_path)
-          rescue
-            raise "could not copy from #{storage_file} to #{sys_path}"
-          end
+          Crawling.copy_file storage_file, sys_path
         end
       end
     end
