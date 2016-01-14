@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'crawling'
+require 'moister'
+require 'ostruct'
+
+module Crawling::Command
+  def self.run args
+    config = nil
+
+    Moister::SubcommandOptionParser.new do |op|
+      op.banner = 'usage: crawling [global options] command [command options]'
+
+      op.for_all do |op|
+        op.on_tail '-h', '--help', 'show this help message' do
+          puts op
+          exit
+        end
+      end
+
+      op.on '-c', '--config dir', 'path to configuration directory', 'config_dir'
+      op.on '-H', '--home dir', 'path to home directory', 'home_dir'
+
+      op.subcommand 'cd', 'change to config directory'
+      op.subcommand 'add', 'add files to config directory'
+      op.subcommand 'get', 'get files from config directory'
+      op.subcommand 'diff', 'show differences between config directory and current config'
+      op.subcommand 'merge', 'merge differences between config directory and current config'
+      op.subcommand 'git-clone', 'clone config directory from git'
+
+      parsed_cfg = op.parse(args).to_h
+
+      parsed_cfg.merge! parsed_cfg[:config]
+      parsed_cfg.delete :config
+
+      config = OpenStruct.new parsed_cfg
+    end
+
+    unless config.command
+      puts 'please supply a command, see --help'
+      exit
+    end
+
+    crawling = Crawling::Instance.new(config_dir: config.config_dir, home_dir: config.home_dir)
+    case config.command
+    when 'cd'
+      crawling.cd config.positionals[0]
+    when 'add'
+      crawling.add config.positionals
+    when 'get'
+      crawling.get config.positionals
+    when 'diff'
+      crawling.diff config.positonals
+    when 'merge'
+      crawling.merge config.positionals
+    when 'git-clone'
+      crawling.git_clone config.positionals[0]
+    end
+  rescue RuntimeError => e
+    puts e.to_s
+  end
+end
+
+Crawling::Command::run ARGV
