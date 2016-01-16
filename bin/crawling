@@ -51,7 +51,7 @@ module Crawling::Command
     when 'get'
       crawling.get config.positionals
     when 'diff'
-      crawling.diff config.positonals
+      crawling.diff config.positionals
     when 'merge'
       crawling.merge config.positionals
     when 'git-clone'
