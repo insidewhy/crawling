@@ -50,7 +50,7 @@ describe Crawling do
     expect(Crawling::VERSION).not_to be nil
   end
 
-  it 'adds a directory and a file better', focus: true do
+  it 'adds a directory and a file better' do
     config_dir = '/tmp'
     crawling = Crawling::Instance.new(home_dir: '.', config_dir: config_dir)
     expect(Dir).to receive(:exists?).with('dir') { true }

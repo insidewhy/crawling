@@ -9,8 +9,10 @@ module Crawling
   # path to repository for the system
   SYSTEM_PARENT_DIR = 'system'
 
+  N_LINES_DIFF_CONTEXT = 3
+
   def self.child_files_recursive path
-    Dir.glob("#{path}/**/*").reject(&File.method(:directory?))
+    Dir.glob("#{path}/**/*", File::FNM_DOTMATCH).reject(&File.method(:directory?))
   end
 
   # Like File.cp but also creates the parent directory at destination if it doesn't exist
@@ -49,8 +51,7 @@ module Crawling
       paths.each do |path|
         raise "path #{path} does not exist" unless File.exists? path
 
-        files_from(path).each do |file|
-          storage_file = get_storage_path file
+        each_with_storage_path(files_from path) do |file, storage_file|
           Crawling.copy_file file, storage_file
         end
       end
@@ -59,8 +60,7 @@ module Crawling
     def get paths
       raise "get command requires paths" if paths.empty?
 
-      paths.each do |path|
-        storage_path = get_storage_path path
+      each_with_storage_path(paths) do |path, storage_path|
         raise "path #{path} does not exist in storage" unless File.exists? storage_path
 
         files_from(storage_path).each do |storage_file|
@@ -71,17 +71,26 @@ module Crawling
     end
 
     def diff paths
-      if paths.empty?
-        # TODO: get all path offsets from data directory
+      each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
+        diff = Diffy::Diff.new(
+          storage_file,
+          file,
+          source: 'files',
+          include_diff_info: true,
+          context: N_LINES_DIFF_CONTEXT
+        ).to_s
+        unless diff == ''
+          puts "#{file}:"
+          puts diff
+          puts
+        end
       end
-      puts "TODO: diff #{paths}"
     end
 
     def merge paths
-      if paths.empty?
-        # TODO: get all path offsets from data directory
+      each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
+        puts "TODO: merge #{file} #{storage_file}"
       end
-      puts "TODO: merge #{paths}"
     end
 
     def git_clone origin
@@ -97,6 +106,12 @@ module Crawling
 
     def relative_path_to target, relative_to
       Pathname.new(target).expand_path.relative_path_from relative_to
+    end
+
+    def each_with_storage_path paths
+      paths.each do |path|
+        yield path, get_storage_path(path)
+      end
     end
 
     def get_home_path path
@@ -115,6 +130,19 @@ module Crawling
         File.join @home_dir, *tail
       else
         raise "storage type #{head} not supported yet"
+      end
+    end
+
+    # if paths is empty then get home paths for all paths in storage, else get the
+    # files recursively reachable from the provided paths
+    def files_from_paths_or_all paths
+      if paths.empty?
+        # TODO: also support 'SYSTEM_PARENT_DIR'
+        Crawling.child_files_recursive(
+          File.join(@config_dir, HOME_PARENT_DIR)
+        ).map &method(:from_storage_path)
+      else
+        paths.map(&method(:files_from)).flatten
       end
     end
 
