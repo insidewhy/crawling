@@ -2,23 +2,14 @@
 
 [![build status](https://circleci.com/gh/ohjames/crawling.png)](https://circleci.com/gh/ohjames/crawling)
 
-Welcome to crawling, documentation coming soon!
+Welcome to crawling, documentation coming soon, for now see `crawling -h`.
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'crawling'
+Install ruby and gem then:
 ```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install crawling
+gem install crawling
+```
 
 ## Usage
 

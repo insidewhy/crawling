@@ -107,25 +107,25 @@ module Crawling
         end
 
         while (diff_string = get_diff storage_file, file) != ''
-          print "#{file}: show [d]iff, [m]erge, take [h]ome, take [S]tore, skip [n]ext? "
+          print "#{file}: [a]dd to store, [g]et from store, [d]iff, [m]erge, [s]kip? "
           answer = STDIN.gets.chomp
           case answer
+          when 'a'
+            Crawling.copy_file file, storage_file
+            break
+          when 'g'
+            Crawling.copy_file storage_file, file
+            break
           when 'd'
             puts diff_string
             puts
             redo
-          when 'h'
-            Crawling.copy_file file, storage_file
-            break
           when 'm'
             system *@merge_app.sub('%s', storage_file).sub('%h', file).split(' ')
-          when 'n'
-            break
-          when 'S'
-            Crawling.copy_file storage_file, file
+          when 's'
             break
           else
-            puts 'please answer with d, h, m, n or S'
+            puts 'please answer with a, d, g, m, or s'
             redo
           end
         end
