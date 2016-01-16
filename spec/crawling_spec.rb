@@ -50,10 +50,16 @@ describe Crawling do
     expect(Crawling::VERSION).not_to be nil
   end
 
-  it 'adds a directory and a file' do
-    Dir.chdir File.join(TEST_DIR, 'home1')
-    run_crawling '-H', '.', 'add', 'dir', 'file1'
-    data_files_should_exist 'home', 'file1', 'dir/file1', 'dir/file2', 'dir/subdir/file1'
+  it 'adds a directory and a file better', focus: true do
+    config_dir = '/tmp'
+    crawling = Crawling::Instance.new(home_dir: '.', config_dir: config_dir)
+    expect(Dir).to receive(:exists?).with('dir') { true }
+    expect(Dir).to receive(:exists?).with('file1') { false }
+    expect(Crawling).to receive(:child_files_recursive).with('dir') { ['dir/file1'] }
+    expect(Crawling).to receive(:copy_file).with('dir/file1', File.join(config_dir, 'home', 'dir/file1'))
+    expect(Crawling).to receive(:copy_file).with('file1', File.join(config_dir, 'home', 'file1'))
+    allow(File).to receive(:exists?) { true }
+    crawling.add(['dir', 'file1'])
   end
 
   it 'adds a single file within the subdirectory specified with an absolute path' do

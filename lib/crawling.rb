@@ -1,5 +1,6 @@
 require "crawling/version"
 require "diffy"
+require "pathname"
 
 module Crawling
   # path to repository for user(s)
