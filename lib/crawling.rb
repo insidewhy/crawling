@@ -132,9 +132,8 @@ module Crawling
       end
     end
 
-    def git_clone origin
-      raise "must supply git repository" if origin.nil?
-      puts "TODO: git clone #{origin}"
+    def clone
+      raise "clone: command not supported yet"
     end
 
     private
