@@ -72,6 +72,8 @@ module Crawling
 
     def diff paths
       each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
+        next if file_or_storage_file_doesnt_exist file, storage_file
+
         diff = Diffy::Diff.new(
           storage_file,
           file,
@@ -148,6 +150,20 @@ module Crawling
 
     def files_from path
       Dir.exists?(path) ? Crawling.child_files_recursive(path) : [path]
+    end
+
+    def file_or_storage_file_doesnt_exist file, storage_file
+      if not File.exists? file
+        if File.exists? storage_file
+          puts "#{file}: doesn't exist in home directory"
+        else
+          puts "#{file}: doesn't exist in home directory or store"
+        end
+        true
+      elsif not File.exists? storage_file
+        puts "#{file}: doesn't exist in store"
+        true
+      end
     end
   end
 end
