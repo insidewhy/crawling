@@ -8,6 +8,8 @@ require 'ostruct'
 module Crawling::Command
   def self.run args
     config = nil
+    command = nil
+    positionals = nil
 
     Moister::SubcommandOptionParser.new do |op|
       op.banner = 'usage: crawling [global options] command [command options]'
@@ -29,33 +31,31 @@ module Crawling::Command
       op.subcommand 'merge', 'merge differences between config directory and current config'
       op.subcommand 'git-clone', 'clone config directory from git'
 
-      parsed_cfg = op.parse(args).to_h
-
-      parsed_cfg.merge! parsed_cfg[:config]
-      parsed_cfg.delete :config
-
-      config = OpenStruct.new parsed_cfg
+      parsed_cfg = op.parse(args)
+      positionals = parsed_cfg.positionals
+      command = parsed_cfg.command
+      config = OpenStruct.new parsed_cfg[:config]
     end
 
-    unless config.command
+    unless command
       puts 'please supply a command, see --help'
       exit
     end
 
-    crawling = Crawling::Instance.new(config_dir: config.config_dir, home_dir: config.home_dir)
-    case config.command
+    crawling = Crawling::Instance.new(**config.to_h)
+    case command
     when 'cd'
-      crawling.cd config.positionals[0]
+      crawling.cd positionals[0]
     when 'add'
-      crawling.add config.positionals
+      crawling.add positionals
     when 'get'
-      crawling.get config.positionals
+      crawling.get positionals
     when 'diff'
-      crawling.diff config.positionals
+      crawling.diff positionals
     when 'merge'
-      crawling.merge config.positionals
+      crawling.merge positionals
     when 'git-clone'
-      crawling.git_clone config.positionals[0]
+      crawling.git_clone positionals[0]
     end
   rescue RuntimeError => e
     puts e.to_s
