@@ -27,11 +27,12 @@ module Crawling
   end
 
   class Instance
-    def initialize(config_dir: nil, home_dir: nil)
+    def initialize(config_dir: nil, home_dir: nil, merge_app: nil)
       @home_dir = home_dir || ENV['HOME']
       @home_pathname = Pathname.new(@home_dir).expand_path
       @config_dir = config_dir || "#{@home_dir}/.config/crawling"
       @config_pathname = Pathname.new(@config_dir).expand_path
+      @merge_app = merge_app || 'vimdiff %s %h'
     end
 
     def cd(subdir = nil)
@@ -72,15 +73,13 @@ module Crawling
 
     def diff paths
       each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
-        next if file_or_storage_file_doesnt_exist file, storage_file
+        missing_from = file_or_storage_file_doesnt_exist file, storage_file
+        if missing_from
+          puts "#{file}: doesn't exist in #{missing_from}"
+          next
+        end
 
-        diff = Diffy::Diff.new(
-          storage_file,
-          file,
-          source: 'files',
-          include_diff_info: true,
-          context: N_LINES_DIFF_CONTEXT
-        ).to_s
+        diff = get_diff storage_file, file
         unless diff == ''
           puts "#{file}:"
           puts diff
@@ -91,7 +90,45 @@ module Crawling
 
     def merge paths
       each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
-        puts "TODO: merge #{file} #{storage_file}"
+        missing_from = file_or_storage_file_doesnt_exist file, storage_file
+        if missing_from
+          case missing_from
+          when 'home'
+            puts "#{file}: creating from store"
+            Crawling.copy_file storage_file, file
+          when 'store'
+            puts "#{file}: creating in store from home"
+            Crawling.copy_file storage_file, file
+          else
+            puts "#{file}: does not exist in home or store"
+          end
+
+          next
+        end
+
+        while (diff_string = get_diff storage_file, file) != ''
+          print "#{file}: show [d]iff, [m]erge, take [h]ome, take [S]tore, skip [n]ext? "
+          answer = STDIN.gets.chomp
+          case answer
+          when 'd'
+            puts diff_string
+            puts
+            redo
+          when 'h'
+            Crawling.copy_file file, storage_file
+            break
+          when 'm'
+            system *@merge_app.sub('%s', storage_file).sub('%h', file).split(' ')
+          when 'n'
+            break
+          when 'S'
+            Crawling.copy_file storage_file, file
+            break
+          else
+            puts 'please answer with d, h, m, n or S'
+            redo
+          end
+        end
       end
     end
 
@@ -155,15 +192,23 @@ module Crawling
     def file_or_storage_file_doesnt_exist file, storage_file
       if not File.exists? file
         if File.exists? storage_file
-          puts "#{file}: doesn't exist in home directory"
+          'home'
         else
-          puts "#{file}: doesn't exist in home directory or store"
+          'home directory or store'
         end
-        true
       elsif not File.exists? storage_file
-        puts "#{file}: doesn't exist in store"
-        true
+        'store'
       end
+    end
+
+    def get_diff src_file, dest_file
+      diff = Diffy::Diff.new(
+        src_file,
+        dest_file,
+        source: 'files',
+        include_diff_info: true,
+        context: N_LINES_DIFF_CONTEXT
+      ).to_s
     end
   end
 end

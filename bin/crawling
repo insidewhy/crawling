@@ -28,7 +28,9 @@ module Crawling::Command
       op.subcommand 'add', 'add files to config directory'
       op.subcommand 'get', 'get files from config directory'
       op.subcommand 'diff', 'show differences between config directory and current config'
-      op.subcommand 'merge', 'merge differences between config directory and current config'
+      op.subcommand 'merge', 'merge differences between config directory and current config' do |subop|
+        op.on '-m', '--merge-app app', 'command used to merge files', 'merge_app'
+      end
       op.subcommand 'git-clone', 'clone config directory from git'
 
       parsed_cfg = op.parse(args)
@@ -59,6 +61,8 @@ module Crawling::Command
     end
   rescue RuntimeError => e
     puts e.to_s
+  rescue Interrupt => e
+    exit 1
   end
 end
 
