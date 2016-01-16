@@ -24,7 +24,7 @@ module Crawling::Command
       op.on '-c', '--config dir', 'path to configuration directory', 'config_dir'
       op.on '-H', '--home dir', 'path to home directory', 'home_dir'
 
-      op.subcommand 'cd', 'change to store directory'
+      op.subcommand 'cd', 'run shell in store directory'
       op.subcommand 'add', 'add files to store directory'
       op.subcommand 'get', 'get files from store directory'
       op.subcommand 'diff', 'show differences between store directory and filesystem'
