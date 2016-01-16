@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["James Pike"]
   spec.email         = ["github@chilon.net"]
 
-  spec.summary       = %q{Tool to manage your personal configuration and environment files.}
-  spec.description   = %q{Helps you to easily store your config files and distribute them.}
+  spec.summary       = %q{Tool to manage personal configuration and environment files.}
+  spec.description   = spec.summary
   spec.homepage      = "http://github.com/ohjames/crawling"
   spec.license       = "MIT"
 
