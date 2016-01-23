@@ -29,10 +29,10 @@ module Crawling::Command
       op.on '-H', '--home dir', 'path to home directory', 'home_dir'
 
       op.subcommand 'cd [path]', 'run shell in store directory'
-      op.subcommand 'add *paths', 'add paths to store directory'
-      op.subcommand 'get *paths', 'get paths from store directory'
-      op.subcommand 'diff', 'show differences between store directory and filesystem'
-      op.subcommand 'merge [*paths]', 'merge differences between store directory and filesystem' do |subop|
+      op.subcommand 'add,a *paths', 'add paths to store directory'
+      op.subcommand 'get,g *paths', 'get paths from store directory'
+      op.subcommand 'diff,d [*paths]', 'show differences between store directory and filesystem'
+      op.subcommand 'merge,m [*paths]', 'merge differences between store directory and filesystem' do |subop|
         op.on '-m', '--merge-app app', 'command used to merge files', 'merge_app'
       end
       op.subcommand 'clone', 'clone or pull latest store using configured commands'
