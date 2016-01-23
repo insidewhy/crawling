@@ -37,7 +37,7 @@ module Crawling
 
     def cd(subdir = nil)
       cd_dir = get_config_dir
-      cd_dir = Path.join(cd_dir, subdir) if subdir
+      cd_dir = File.join(cd_dir, HOME_PARENT_DIR, subdir) if subdir
       raise "directory #{subdir} doesn't exist" unless Dir.exists? cd_dir
 
       Dir.chdir cd_dir
