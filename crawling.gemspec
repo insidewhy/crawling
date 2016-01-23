@@ -31,6 +31,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec"
 
-  spec.add_dependency "moister", "~> 0.2"
+  spec.add_dependency "moister", "~> 0.3"
   spec.add_dependency "diffy", "~> 3.1.0"
 end

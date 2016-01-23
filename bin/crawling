@@ -6,6 +6,10 @@ require 'moister'
 require 'ostruct'
 
 module Crawling::Command
+  def self.nil_if_empty arr
+    arr.empty? ? nil : arr
+  end
+
   def self.run args
     config = nil
     command = nil
@@ -24,17 +28,16 @@ module Crawling::Command
       op.on '-c', '--config dir', 'path to configuration directory', 'config_dir'
       op.on '-H', '--home dir', 'path to home directory', 'home_dir'
 
-      op.subcommand 'cd', 'run shell in store directory'
-      op.subcommand 'add', 'add files to store directory'
-      op.subcommand 'get', 'get files from store directory'
+      op.subcommand 'cd [path]', 'run shell in store directory'
+      op.subcommand 'add *paths', 'add paths to store directory'
+      op.subcommand 'get *paths', 'get paths from store directory'
       op.subcommand 'diff', 'show differences between store directory and filesystem'
-      op.subcommand 'merge', 'merge differences between store directory and filesystem' do |subop|
+      op.subcommand 'merge [*paths]', 'merge differences between store directory and filesystem' do |subop|
         op.on '-m', '--merge-app app', 'command used to merge files', 'merge_app'
       end
       op.subcommand 'clone', 'clone or pull latest store using configured commands'
 
       parsed_cfg = op.parse(args)
-      positionals = parsed_cfg.positionals
       command = parsed_cfg.command
       config = OpenStruct.new parsed_cfg[:config]
     end
@@ -44,18 +47,21 @@ module Crawling::Command
       exit
     end
 
+    command_cfg = OpenStruct.new config[command]
+    config.delete_field command
+
     crawling = Crawling::Instance.new(**config.to_h)
     case command
     when 'cd'
-      crawling.cd positionals[0]
+      crawling.cd command_cfg.path
     when 'add'
-      crawling.add positionals
+      crawling.add command_cfg.paths
     when 'get'
-      crawling.get positionals
+      crawling.get command_cfg.paths
     when 'diff'
-      crawling.diff positionals
+      crawling.diff nil_if_empty(command_cfg.paths)
     when 'merge'
-      crawling.merge positionals
+      crawling.merge nil_if_empty(command_cfg.paths)
     when 'clone'
       crawling.clone
     end
