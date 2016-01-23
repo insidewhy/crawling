@@ -71,7 +71,7 @@ module Crawling
       end
     end
 
-    def diff paths
+    def diff paths = nil
       each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
         missing_from = file_or_storage_file_doesnt_exist file, storage_file
         if missing_from
@@ -88,7 +88,7 @@ module Crawling
       end
     end
 
-    def merge paths
+    def merge paths = nil
       each_with_storage_path(files_from_paths_or_all paths) do |file, storage_file|
         missing_from = file_or_storage_file_doesnt_exist file, storage_file
         if missing_from
@@ -174,7 +174,7 @@ module Crawling
     # if paths is empty then get home paths for all paths in storage, else get the
     # files recursively reachable from the provided paths
     def files_from_paths_or_all paths
-      if paths.empty?
+      if paths.nil?
         # TODO: also support 'SYSTEM_PARENT_DIR'
         Crawling.child_files_recursive(
           File.join(@config_dir, HOME_PARENT_DIR)
