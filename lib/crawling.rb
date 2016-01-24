@@ -15,6 +15,11 @@ module Crawling
     Dir.glob("#{path}/**/*", File::FNM_DOTMATCH).reject(&File.method(:directory?))
   end
 
+  # relative_to must be an absolute Pathname
+  def self.relative_path_to target, relative_to
+    Pathname.new(target).expand_path.relative_path_from relative_to
+  end
+
   # Like File.cp but also creates the parent directory at destination if it doesn't exist
   def self.copy_file src_file, dest_file
     dest_parent_dir = File.dirname dest_file
@@ -26,22 +31,49 @@ module Crawling
     end
   end
 
+  class Store
+    attr_reader :store_dir
+
+    def initialize store_dir, sys_dir
+      @store_dir = File.absolute_path store_dir
+      @store_pathname = Pathname.new(store_dir).expand_path
+      @sys_dir = File.absolute_path sys_dir
+      @sys_pathname = Pathname.new(sys_dir).expand_path
+    end
+
+    # if path is within store then return system path otherwise return nil
+    def get_sys_path path
+      if path.start_with? @store_dir
+        File.join @sys_dir, Crawling.relative_path_to(path, @store_pathname)
+      end
+    end
+
+    # if path is within system then return store path otherwise return nil
+    def get_store_path path
+      if path.start_with? @sys_dir
+        File.join @store_dir, Crawling.relative_path_to(path, @sys_pathname)
+      end
+    end
+  end
+
   class Instance
     def initialize(config_dir: nil, home_dir: nil, merge_app: nil)
       @home_dir = home_dir || ENV['HOME']
-      @home_pathname = Pathname.new(@home_dir).expand_path
       @config_dir = config_dir || "#{@home_dir}/.config/crawling"
       @config_pathname = Pathname.new(@config_dir).expand_path
       @merge_app = merge_app || 'vimdiff %s %h'
+
+      stores = { 'home' => @home_dir }
+      @stores = stores.map do |store_dir, sys_dir|
+        store_dir = File.join(@config_dir, store_dir)
+        Store.new store_dir, sys_dir
+      end
     end
 
-    def cd(subdir = nil)
-      cd_dir = get_config_dir
-      cd_dir = File.join(cd_dir, HOME_PARENT_DIR, subdir) if subdir
-      raise "directory #{subdir} doesn't exist" unless Dir.exists? cd_dir
-
-      Dir.chdir cd_dir
-      puts "creating shell in #{cd_dir}, type exit or ctrl-D to exit"
+    def cd
+      FileUtils::mkdir_p @config_dir unless Dir.exists? @config_dir
+      Dir.chdir @config_dir
+      puts "creating shell in #{@config_dir}, type exit or ctrl-D to exit"
       system ENV['SHELL']
       puts "crawling shell exited"
     end
@@ -65,8 +97,13 @@ module Crawling
         raise "path #{path} does not exist in storage" unless File.exists? storage_path
 
         files_from(storage_path).each do |storage_file|
-          sys_path = from_storage_path storage_file
-          Crawling.copy_file storage_file, sys_path
+          if storage_file == storage_path
+            Crawling.copy_file storage_file, path
+          else
+            # path was a directory so recalculate new system path
+            path_offset = storage_file[storage_path.length..-1]
+            Crawling.copy_file storage_file, path + path_offset
+          end
         end
       end
     end
@@ -138,47 +175,33 @@ module Crawling
 
     private
     def get_config_dir
-      FileUtils::mkdir_p @config_dir unless Dir.exists? @config_dir
       @config_dir
-    end
-
-    def relative_path_to target, relative_to
-      Pathname.new(target).expand_path.relative_path_from relative_to
     end
 
     def each_with_storage_path paths
       paths.each do |path|
-        yield path, get_storage_path(path)
+        pair = get_path_pair(path)
+        raise "could not resolve #{path} to store" if pair.nil?
+        yield pair
       end
     end
 
-    def get_home_path path
-      relative_path_to path, @home_pathname
-    end
-
-    def get_storage_path path
-      # TODO: get system or home path depending on whether it is a subdirectory of the current user
-      File.join @config_dir, HOME_PARENT_DIR, get_home_path(path)
-    end
-
-    def from_storage_path path
-      cfg_rel_path = Pathname.new(relative_path_to path, @config_pathname)
-      head, *tail = Pathname(cfg_rel_path).each_filename.to_a
-      if head === 'home'
-        File.join @home_dir, *tail
-      else
-        raise "storage type #{head} not supported yet"
+    def get_path_pair path
+      path = File.absolute_path path
+      @stores.each do |store|
+        sys_path = store.get_sys_path path
+        return [ sys_path, path ] if sys_path
+        store_path = store.get_store_path path
+        return [ path, store_path ] if store_path
       end
+      nil
     end
 
-    # if paths is empty then get home paths for all paths in storage, else get the
-    # files recursively reachable from the provided paths
+    # if paths is empty then get all paths from stores otherwise get files
+    # recursively reachable from the provided paths
     def files_from_paths_or_all paths
       if paths.nil?
-        # TODO: also support 'SYSTEM_PARENT_DIR'
-        Crawling.child_files_recursive(
-          File.join(@config_dir, HOME_PARENT_DIR)
-        ).map &method(:from_storage_path)
+        @stores.map { |store| Crawling.child_files_recursive(store.store_dir) }.flatten
       else
         paths.map(&method(:files_from)).flatten
       end

@@ -28,7 +28,7 @@ module Crawling::Command
       op.on '-c', '--config dir', 'path to configuration directory', 'config_dir'
       op.on '-H', '--home dir', 'path to home directory', 'home_dir'
 
-      op.subcommand 'cd [path]', 'run shell in store directory'
+      op.subcommand 'cd', 'run shell in store directory'
       op.subcommand 'add,a *paths', 'add paths to store directory'
       op.subcommand 'get,g *paths', 'get paths from store directory'
       op.subcommand 'diff,d [*paths]', 'show differences between store directory and filesystem'
@@ -53,7 +53,7 @@ module Crawling::Command
     crawling = Crawling::Instance.new(**config.to_h)
     case command
     when 'cd'
-      crawling.cd command_cfg.path
+      crawling.cd
     when 'add'
       crawling.add command_cfg.paths
     when 'get'

@@ -56,8 +56,8 @@ describe Crawling do
     expect(Dir).to receive(:exists?).with('dir') { true }
     expect(Dir).to receive(:exists?).with('file1') { false }
     expect(Crawling).to receive(:child_files_recursive).with('dir') { ['dir/file1'] }
-    expect(Crawling).to receive(:copy_file).with('dir/file1', File.join(config_dir, 'home', 'dir/file1'))
-    expect(Crawling).to receive(:copy_file).with('file1', File.join(config_dir, 'home', 'file1'))
+    expect(Crawling).to receive(:copy_file).with(File.absolute_path('dir/file1'), File.join(config_dir, 'home', 'dir/file1'))
+    expect(Crawling).to receive(:copy_file).with(File.absolute_path('file1'), File.join(config_dir, 'home', 'file1'))
     allow(File).to receive(:exists?) { true }
     crawling.add(['dir', 'file1'])
   end
