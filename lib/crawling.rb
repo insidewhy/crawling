@@ -130,14 +130,14 @@ module Crawling
         missing_from = file_or_storage_file_doesnt_exist file, storage_file
         if missing_from
           case missing_from
-          when 'home'
-            puts "#{file}: creating from store"
+          when 'system'
+            puts "#{file}: creating in system from store"
             Crawling.copy_file storage_file, file
           when 'store'
-            puts "#{file}: creating in store from home"
-            Crawling.copy_file storage_file, file
+            puts "#{file}: creating in store from system"
+            Crawling.copy_file file, storage_file
           else
-            puts "#{file}: does not exist in home or store"
+            puts "#{file}: does not exist in system or store"
           end
 
           next
@@ -214,9 +214,9 @@ module Crawling
     def file_or_storage_file_doesnt_exist file, storage_file
       if not File.exists? file
         if File.exists? storage_file
-          'home'
+          'system'
         else
-          'home directory or store'
+          'system directory or store'
         end
       elsif not File.exists? storage_file
         'store'
