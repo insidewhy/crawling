@@ -61,7 +61,7 @@ module Crawling
       @home_dir = home_dir || ENV['HOME']
       @config_dir = config_dir || "#{@home_dir}/.config/crawling"
       @config_pathname = Pathname.new(@config_dir).expand_path
-      @merge_app = merge_app || 'vimdiff %s %h'
+      @merge_app = merge_app || 'nvim -d %s %h'
 
       stores = { 'home' => @home_dir }
       @stores = stores.map do |store_dir, sys_dir|

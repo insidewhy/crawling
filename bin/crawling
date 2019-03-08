@@ -33,7 +33,7 @@ module Crawling::Command
       op.subcommand 'get,g *paths', 'get paths from store directory'
       op.subcommand 'diff,d [*paths]', 'show differences between store directory and filesystem'
       op.subcommand 'merge,m [*paths]', 'merge differences between store directory and filesystem' do |subop|
-        op.on '-m', '--merge-app app', 'command used to merge files', 'merge_app'
+        subop.on '-m', '--merge-app app', 'command used to merge files', 'merge_app'
       end
       op.subcommand 'clone', 'clone or pull latest store using configured commands'
 
