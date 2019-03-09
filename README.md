@@ -1,6 +1,6 @@
 # crawling
 
-[![build status](https://circleci.com/gh/ohjames/crawling.png)](https://circleci.com/gh/ohjames/crawling)
+[![build status](https://circleci.com/gh/ohjames/crawling.png?style=shield)](https://circleci.com/gh/ohjames/crawling)
 
 Welcome to crawling, documentation coming soon, for now see `crawling -h`.
 
