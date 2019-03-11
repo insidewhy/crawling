@@ -3,12 +3,6 @@ require "diffy"
 require "pathname"
 
 module Crawling
-  # path to repository for user(s)
-  HOME_PARENT_DIR = 'home'
-
-  # path to repository for the system
-  SYSTEM_PARENT_DIR = 'system'
-
   N_LINES_DIFF_CONTEXT = 3
 
   def self.child_files_recursive path
@@ -63,7 +57,10 @@ module Crawling
       @config_pathname = Pathname.new(@config_dir).expand_path
       @merge_app = merge_app || 'nvim -d %s %h'
 
-      stores = { 'home' => @home_dir }
+      stores = {
+        'home' => @home_dir,
+        # 'system' => '/',
+      }
       @stores = stores.map do |store_dir, sys_dir|
         store_dir = File.join(@config_dir, store_dir)
         Store.new store_dir, sys_dir
@@ -71,7 +68,7 @@ module Crawling
     end
 
     def cd
-      FileUtils::mkdir_p @config_dir unless Dir.exists? @config_dir
+      FileUtils.mkdir_p @config_dir unless Dir.exists? @config_dir
       Dir.chdir @config_dir
       puts "creating shell in #{@config_dir}, type exit or ctrl-D to exit"
       system ENV['SHELL']
@@ -187,11 +184,17 @@ module Crawling
       end
     end
 
+    # if path is in the store then return it with the system path, if it
+    # is a system path then return it with the store path
     def get_path_pair path
       path = File.absolute_path path
       @stores.each do |store|
         sys_path = store.get_sys_path path
         return [ sys_path, path ] if sys_path
+      end
+
+      # path is not in the store
+      @stores.each do |store|
         store_path = store.get_store_path path
         return [ path, store_path ] if store_path
       end
