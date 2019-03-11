@@ -35,7 +35,7 @@ module Crawling::Command
       op.subcommand 'merge,m [*paths]', 'merge differences between store directory and filesystem' do |subop|
         subop.on '-m', '--merge-app app', 'command used to merge files', 'merge_app'
       end
-      op.subcommand 'clone', 'clone or pull latest store using configured commands'
+      op.subcommand 'pull,p', 'pull latest store'
 
       parsed_cfg = op.parse(args)
       command = parsed_cfg.command
@@ -62,8 +62,8 @@ module Crawling::Command
       crawling.diff nil_if_empty(command_cfg.paths)
     when 'merge'
       crawling.merge nil_if_empty(command_cfg.paths)
-    when 'clone'
-      crawling.clone
+    when 'pull'
+      crawling.pull
     end
   rescue RuntimeError => e
     puts e.to_s

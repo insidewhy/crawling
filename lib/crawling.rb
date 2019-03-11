@@ -169,8 +169,9 @@ module Crawling
       end
     end
 
-    def clone
-      raise "clone: command not supported yet"
+    def pull
+      Dir.chdir @config_dir
+      system 'git pull'
     end
 
     private
