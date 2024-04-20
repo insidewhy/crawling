@@ -68,7 +68,7 @@ module Crawling
     end
 
     def cd
-      FileUtils.mkdir_p @config_dir unless Dir.exists? @config_dir
+      FileUtils.mkdir_p @config_dir unless Dir.exist? @config_dir
       Dir.chdir @config_dir
       puts "creating shell in #{@config_dir}, type exit or ctrl-D to exit"
       system ENV['SHELL']
@@ -79,7 +79,7 @@ module Crawling
       raise "add command requires paths" if paths.empty?
 
       paths.each do |path|
-        raise "path #{path} does not exist" unless File.exists? path
+        raise "path #{path} does not exist" unless File.exist? path
 
         each_with_storage_path(files_from path) do |file, storage_file|
           Crawling.copy_file file, storage_file
@@ -91,7 +91,7 @@ module Crawling
       raise "get command requires paths" if paths.empty?
 
       each_with_storage_path(paths) do |path, storage_path|
-        raise "path #{path} does not exist in storage" unless File.exists? storage_path
+        raise "path #{path} does not exist in storage" unless File.exist? storage_path
 
         files_from(storage_path).each do |storage_file|
           if storage_file == storage_path
@@ -212,17 +212,17 @@ module Crawling
     end
 
     def files_from path
-      Dir.exists?(path) ? Crawling.child_files_recursive(path) : [path]
+      Dir.exist?(path) ? Crawling.child_files_recursive(path) : [path]
     end
 
     def file_or_storage_file_doesnt_exist file, storage_file
-      if not File.exists? file
-        if File.exists? storage_file
+      if not File.exist? file
+        if File.exist? storage_file
           'system'
         else
           'system directory or store'
         end
-      elsif not File.exists? storage_file
+      elsif not File.exist? storage_file
         'store'
       end
     end

@@ -8,7 +8,7 @@ describe Crawling do
   CRAWLING = File.join PROJECT_ROOT, 'bin', 'crawling'
 
   before(:each) do
-    FileUtils.rm_r CONFIG_DIR if Dir.exists? CONFIG_DIR
+    FileUtils.rm_r CONFIG_DIR if Dir.exist? CONFIG_DIR
     @config_dir = CONFIG_DIR
     @output_dir = CONFIG_DIR
     @starting_dir = Dir.pwd
@@ -53,12 +53,12 @@ describe Crawling do
   it 'adds a directory and a file better' do
     config_dir = '/tmp'
     crawling = Crawling::Instance.new(home_dir: '.', config_dir: config_dir)
-    expect(Dir).to receive(:exists?).with('dir') { true }
-    expect(Dir).to receive(:exists?).with('file1') { false }
+    expect(Dir).to receive(:exist?).with('dir') { true }
+    expect(Dir).to receive(:exist?).with('file1') { false }
     expect(Crawling).to receive(:child_files_recursive).with('dir') { ['dir/file1'] }
     expect(Crawling).to receive(:copy_file).with(File.absolute_path('dir/file1'), File.join(config_dir, 'home', 'dir/file1'))
     expect(Crawling).to receive(:copy_file).with(File.absolute_path('file1'), File.join(config_dir, 'home', 'file1'))
-    allow(File).to receive(:exists?) { true }
+    allow(File).to receive(:exist?) { true }
     crawling.add(['dir', 'file1'])
   end
 
